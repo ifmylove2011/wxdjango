@@ -69,10 +69,10 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': os.environ.get("MYSQL_DATABASE", 'django_demo'),
-        'USER': os.environ.get("MYSQL_USERNAME"),
-        'HOST': os.environ.get("MYSQL_ADDRESS").split(':')[0],
-        'PORT': os.environ.get("MYSQL_ADDRESS").split(':')[1],
-        'PASSWORD': os.environ.get("MYSQL_PASSWORD"),
+        'USER': os.environ.get("MYSQL_USERNAME",default="root"),
+        'HOST': os.environ.get("MYSQL_ADDRESS",default="127.0.0.1:3306").split(':')[0],
+        'PORT': os.environ.get("MYSQL_ADDRESS",default="127.0.0.1:3306").split(':')[1],
+        'PASSWORD': os.environ.get("MYSQL_PASSWORD",default=''),
         'OPTIONS': {'charset': 'utf8mb4'},
     }
 }
