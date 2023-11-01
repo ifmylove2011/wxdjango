@@ -40,6 +40,8 @@ def dujitang(request_wx, _):
 
 
 def receive_wx(request_wx, _):
+    print(request_wx)
+    print(request_wx.body)
     logger.info('receive wx req: {}'.format(request_wx.body))
     body_unicode = request_wx.body.decode('utf-8')
     body = json.loads(body_unicode)
