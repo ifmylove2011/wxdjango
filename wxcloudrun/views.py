@@ -1,5 +1,6 @@
 import json
 import logging
+import time
 
 from django.http import JsonResponse
 from django.shortcuts import render
@@ -27,32 +28,49 @@ url_dujitang = "http://8zt.cc/api/"
 '''
 
 
-def dujitang(request_wx, _):
-    print('dujitang')
-    logger.info('dujitang req: {}'.format(request_wx.body))
+def dujitang():
     req = request.Request(url_dujitang, headers=head)
     responese = request.urlopen(req)
     html = responese.read().decode('utf-8')
     soup = BeautifulSoup(html, 'lxml')
     body = json.loads(soup.p.string)
     dujitang_content = body['content']
-    return JsonResponse({'code': 0, 'content': dujitang_content},
-                        json_dumps_params={'ensure_ascii': False})
+    return dujitang_content
 
 
 def receive_wx(request_wx, _):
-    print(request_wx)
-    print(request_wx.body)
+    if request_wx.method == 'GET' or request_wx.method == 'get':
+        return JsonResponse({'code': -1, 'errorMsg': '请求方式错误'},
+                            json_dumps_params={'ensure_ascii': False})
+
     logger.info('receive wx req: {}'.format(request_wx.body))
     body_unicode = request_wx.body.decode('utf-8')
     body = json.loads(body_unicode)
 
-    if body['action'] == 'CheckContainerPath':
+    if 'action' in body and body['action'] == 'CheckContainerPath':
         return JsonResponse({}, json_dumps_params={'ensure_ascii': False})
+
+    developer_id = body['ToUserName']
+    user_id = body['FromUserName']
+    create_time = int(time.time())
+    msg_type = body['MsgType']
+    msg_id = body['MsgId']
+    if msg_type == 'text':
+        msg = body['Content']
+        content = req_content(msg)
+        return JsonResponse(
+            {'ToUserName': user_id, 'FromUserName': developer_id, 'CreateTime': create_time, 'MsgType': msg_type,
+             'Content': content}, json_dumps_params={'ensure_ascii': False})
+
     rsp = JsonResponse({'code': 0, 'errorMsg': ''}, json_dumps_params={'ensure_ascii': False})
     return rsp
-    # body_unicode = request_wx.body.decode('utf-8')
-    # body = json.loads(body_unicode)
+
+
+def req_content(content_type):
+    if content_type == '毒鸡汤':
+        return dujitang()
+    else:
+        return '大家都是芳芳的'
 
 
 def index(request, _):
