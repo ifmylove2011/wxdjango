@@ -28,6 +28,7 @@ url_dujitang = "http://8zt.cc/api/"
 
 
 def dujitang(request_wx, _):
+    print('dujitang')
     logger.info('dujitang req: {}'.format(request_wx.body))
     req = request.Request(url_dujitang, headers=head)
     responese = request.urlopen(req)
