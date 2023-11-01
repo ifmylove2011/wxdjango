@@ -15,6 +15,7 @@ head = {
     'user-agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36 QIHU 360EE'}
 
 url_dujitang = "http://8zt.cc/api/"
+url_fuzhizhantie = "https://cp.azite.cn/api/articles?sort=random&pp=1"
 
 '''
 {
@@ -38,17 +39,29 @@ def dujitang():
     return dujitang_content
 
 
+def fuzhizhantie():
+    req = request.Request(url_fuzhizhantie, headers=head)
+    responese = request.urlopen(req)
+    html = responese.read().decode('utf-8')
+    body = json.loads(html)
+    return body[0]['text']
+
+
 def receive_wx(request_wx, _):
     if request_wx.method == 'GET' or request_wx.method == 'get':
-        return JsonResponse({'code': -1, 'errorMsg': '请求方式错误'},
-                            json_dumps_params={'ensure_ascii': False})
+        rsp = JsonResponse({'code': -1, 'errorMsg': '请求方式错误'},
+                           json_dumps_params={'ensure_ascii': False})
+        logger.info('response result: {}'.format(rsp.content.decode('utf-8')))
+        return rsp
 
     logger.info('receive wx req: {}'.format(request_wx.body))
     body_unicode = request_wx.body.decode('utf-8')
     body = json.loads(body_unicode)
 
     if 'action' in body and body['action'] == 'CheckContainerPath':
-        return JsonResponse({}, json_dumps_params={'ensure_ascii': False})
+        rsp = JsonResponse({}, json_dumps_params={'ensure_ascii': False})
+        logger.info(rsp)
+        return rsp
 
     developer_id = body['ToUserName']
     user_id = body['FromUserName']
@@ -58,9 +71,11 @@ def receive_wx(request_wx, _):
     if msg_type == 'text':
         msg = body['Content']
         content = req_content(msg)
-        return JsonResponse(
+        rsp = JsonResponse(
             {'ToUserName': user_id, 'FromUserName': developer_id, 'CreateTime': create_time, 'MsgType': msg_type,
              'Content': content}, json_dumps_params={'ensure_ascii': False})
+        logger.info('response result: {}'.format(rsp.content.decode('utf-8')))
+        return rsp
 
     rsp = JsonResponse({'code': 0, 'errorMsg': ''}, json_dumps_params={'ensure_ascii': False})
     return rsp
@@ -69,6 +84,8 @@ def receive_wx(request_wx, _):
 def req_content(content_type):
     if content_type == '毒鸡汤':
         return dujitang()
+    elif content_type == '复读机':
+        return fuzhizhantie()
     else:
         return '大家都是芳芳的'
 
