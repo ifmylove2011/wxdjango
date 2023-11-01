@@ -25,6 +25,8 @@ url_dujitang = "http://8zt.cc/api/"
   "MsgId": 23637352235060880 // 唯一消息ID，可能发送多个重复消息，需要注意用此ID去重
 }
 '''
+
+
 def dujitang(request_wx, _):
     logger.info('dujitang req: {}'.format(request_wx.body))
     req = request.Request(url_dujitang, headers=head)
@@ -36,11 +38,19 @@ def dujitang(request_wx, _):
     return JsonResponse({'code': 0, 'content': dujitang_content},
                         json_dumps_params={'ensure_ascii': False})
 
-def receive_wx(request_wx, _):
-    logger.info('update_count req: {}'.format(request_wx.body))
 
+def receive_wx(request_wx, _):
+    logger.info('receive wx req: {}'.format(request_wx.body))
+    body_unicode = request_wx.body.decode('utf-8')
+    body = json.loads(body_unicode)
+
+    if body['action'] == 'CheckContainerPath':
+        return JsonResponse({}, json_dumps_params={'ensure_ascii': False})
+    rsp = JsonResponse({'code': 0, 'errorMsg': ''}, json_dumps_params={'ensure_ascii': False})
+    return rsp
     # body_unicode = request_wx.body.decode('utf-8')
     # body = json.loads(body_unicode)
+
 
 def index(request, _):
     """
