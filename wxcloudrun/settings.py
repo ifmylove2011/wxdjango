@@ -64,11 +64,13 @@ WSGI_APPLICATION = 'wxcloudrun.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
-
+print("-------")
+print(os.environ.get("MYSQL_ADDRESS",default="127.0.0.1:3306"))
+print("-------")
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.environ.get("MYSQL_DATABASE", 'django_demo'),
+        'NAME': os.environ.get("MYSQL_DATABASE", 'django_wx'),
         'USER': os.environ.get("MYSQL_USERNAME",default="root"),
         'HOST': os.environ.get("MYSQL_ADDRESS",default="127.0.0.1:3306").split(':')[0],
         'PORT': os.environ.get("MYSQL_ADDRESS",default="127.0.0.1:3306").split(':')[1],
