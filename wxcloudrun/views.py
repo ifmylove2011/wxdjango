@@ -39,8 +39,8 @@ def dujitang(request_wx, _):
 def receive_wx(request_wx, _):
     logger.info('update_count req: {}'.format(request_wx.body))
 
-    body_unicode = request_wx.body.decode('utf-8')
-    body = json.loads(body_unicode)
+    # body_unicode = request_wx.body.decode('utf-8')
+    # body = json.loads(body_unicode)
 
 def index(request, _):
     """

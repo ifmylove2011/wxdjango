@@ -24,5 +24,5 @@ urlpatterns = (
 
     # 获取主页
     url(r'(/)?$', views.index),
-    url(r'/wx(/)?$',views.receive_wx)
+    url(r'wx(/)?$',views.receive_wx)
 )
