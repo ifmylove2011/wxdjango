@@ -1,5 +1,6 @@
 import json
 import logging
+import random
 import time
 
 from django.http import JsonResponse
@@ -16,6 +17,7 @@ head = {
 
 url_dujitang = "http://8zt.cc/api/"
 url_fuzhizhantie = "https://cp.azite.cn/api/articles?sort=random&pp=1"
+url_xuejieba = "https://xuejie8.cc/tag/meizitu"
 
 '''
 {
@@ -47,6 +49,45 @@ def fuzhizhantie():
     return body[0]['text']
 
 
+def xuejieba():
+    req = request.Request(url_xuejieba, headers=head)
+    responese = request.urlopen(req)
+    html = responese.read().decode('utf-8')
+    # print(html)
+    soup = BeautifulSoup(html, 'lxml')
+    tags_li = soup.find_all(class_="post-list-item item-post-style-1")
+    url_xuejieba_detail = tags_li[random.randint(0, len(tags_li))].h2.a
+    print(url_xuejieba_detail.string)
+    print(url_xuejieba_detail.attrs['href'])
+    time.sleep(1)
+    req = request.Request(url_xuejieba_detail.attrs['href'], headers=head)
+    responese = request.urlopen(req)
+    html = responese.read().decode('utf-8')
+    # print(html)
+    soup = BeautifulSoup(html, 'lxml')
+    tag_preview = soup.find(class_='entry-content')
+    tags_img = tag_preview.find_all('img')
+    print(tags_img[0].attrs['data-src'])
+    return url_xuejieba_detail.string, url_xuejieba_detail.attrs['href'], tags_img[0].attrs['data-src']
+    # for tag_img in tags_img:
+    #     print(tags_img)
+
+
+def sese(user_id, developer_id, create_time, msg_type):
+    detail = xuejieba()
+    rsp = JsonResponse(
+        {'ToUserName': user_id, 'FromUserName': developer_id, 'CreateTime': create_time, 'MsgType': msg_type,
+         'ArticleCount': 1, 'Articles': [
+            {
+                "Title": detail[0],
+                "Description": detail[0],
+                "PicUrl": detail[2],
+                "Url": detail[1]
+            }
+        ]}, json_dumps_params={'ensure_ascii': False})
+    return rsp
+
+
 def receive_wx(request_wx, _):
     if request_wx.method == 'GET' or request_wx.method == 'get':
         rsp = JsonResponse({'code': -1, 'errorMsg': '请求方式错误'},
@@ -68,12 +109,23 @@ def receive_wx(request_wx, _):
     create_time = int(time.time())
     msg_type = body['MsgType']
     msg_id = body['MsgId']
+    rsp = JsonResponse({'code': 0, 'errorMsg': ''}, json_dumps_params={'ensure_ascii': False})
+
     if msg_type == 'text':
         msg = body['Content']
-        content = req_content(msg)
-        rsp = JsonResponse(
-            {'ToUserName': user_id, 'FromUserName': developer_id, 'CreateTime': create_time, 'MsgType': msg_type,
-             'Content': content}, json_dumps_params={'ensure_ascii': False})
+        if msg == '毒鸡汤':
+            content = dujitang()
+            rsp = JsonResponse(
+                {'ToUserName': user_id, 'FromUserName': developer_id, 'CreateTime': create_time, 'MsgType': msg_type,
+                 'Content': content}, json_dumps_params={'ensure_ascii': False})
+        elif msg == '复读机':
+            content = fuzhizhantie()
+            rsp = JsonResponse(
+                {'ToUserName': user_id, 'FromUserName': developer_id, 'CreateTime': create_time, 'MsgType': msg_type,
+                 'Content': content}, json_dumps_params={'ensure_ascii': False})
+        elif msg == '今日涩涩':
+            rsp = sese(user_id, developer_id, create_time, 'news')
+
         logger.info('response result: {}'.format(rsp.content.decode('utf-8')))
         return rsp
 
