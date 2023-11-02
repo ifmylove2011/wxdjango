@@ -73,18 +73,22 @@ def xuejieba():
     #     print(tags_img)
 
 
-def sese(user_id, developer_id, create_time, msg_type):
+def sese(user_id, developer_id, create_time):
     detail = xuejieba()
+    # rsp = JsonResponse(
+    #     {'ToUserName': user_id, 'FromUserName': developer_id, 'CreateTime': create_time, 'MsgType': 'news',
+    #      'ArticleCount': 1, 'Articles': [
+    #         {
+    #             "Title": detail[0],
+    #             "Description": detail[0],
+    #             "PicUrl": detail[2],
+    #             "Url": detail[1]
+    #         }
+    #     ]}, json_dumps_params={'ensure_ascii': False})
+    content = xuejieba()[1]
     rsp = JsonResponse(
-        {'ToUserName': user_id, 'FromUserName': developer_id, 'CreateTime': create_time, 'MsgType': msg_type,
-         'ArticleCount': 1, 'Articles': [
-            {
-                "Title": detail[0],
-                "Description": detail[0],
-                "PicUrl": detail[2],
-                "Url": detail[1]
-            }
-        ]}, json_dumps_params={'ensure_ascii': False})
+        {'ToUserName': user_id, 'FromUserName': developer_id, 'CreateTime': create_time, 'MsgType': 'text',
+         'Content': content}, json_dumps_params={'ensure_ascii': False})
     return rsp
 
 
@@ -124,7 +128,7 @@ def receive_wx(request_wx, _):
                 {'ToUserName': user_id, 'FromUserName': developer_id, 'CreateTime': create_time, 'MsgType': msg_type,
                  'Content': content}, json_dumps_params={'ensure_ascii': False})
         elif msg == '今日涩涩':
-            rsp = sese(user_id, developer_id, create_time, 'news')
+            rsp = sese(user_id, developer_id, create_time)
 
         logger.info('response result: {}'.format(rsp.content.decode('utf-8')))
         return rsp
