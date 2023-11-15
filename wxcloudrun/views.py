@@ -18,6 +18,7 @@ head = {
 url_dujitang = "http://8zt.cc/api/"
 url_fuzhizhantie = "https://cp.azite.cn/api/articles?sort=random&pp=1"
 url_xuejieba = "https://xuejie8.cc/tag/meizitu"
+url_momo = "https://momotk.uno"
 
 '''
 {
@@ -49,6 +50,83 @@ def fuzhizhantie():
     return body[0]['text']
 
 
+# 请求momo网站
+def momo(request_wx, _):
+    logger.info(request_wx.GET)
+    params = request_wx.GET
+    if 'page' in params:
+        print(params['page'])
+        rsp = JsonResponse({'code': 0, 'errorMsg': '', 'data': momo_posts(int(params['page']))},
+                           json_dumps_params={'ensure_ascii': False})
+        logger.info('response result: {}'.format(rsp.content.decode('utf-8')))
+        return rsp
+    elif 'data_pid' in params:
+        print(params['data_pid'])
+        detail_url = "{}/{}.html".format(url_momo, params['data_pid'])
+        rsp = JsonResponse({'code': 0, 'errorMsg': '', 'data': momo_detail(detail_url)},
+                           json_dumps_params={'ensure_ascii': False})
+        logger.info('response result: {}'.format(rsp.content.decode('utf-8')))
+        return rsp
+    else:
+        rsp = JsonResponse({'code': -1, 'errorMsg': '参数错误'},
+                           json_dumps_params={'ensure_ascii': False})
+        logger.info('response result: {}'.format(rsp.content.decode('utf-8')))
+        return rsp
+
+
+# 请求列表页
+def momo_posts(page):
+    if page > 1:
+        url_momo1 = "{}/page/{}".format(url_momo, page)
+    else:
+        url_momo1 = url_momo
+
+    req = request.Request(url_momo1, headers=head)
+    responese = request.urlopen(req)
+    html = responese.read().decode('utf-8')
+    soup = BeautifulSoup(html, 'lxml')
+    tag_articles = soup.find_all("article")
+    # print(len(tag_articles))
+
+    json_articles = []
+
+    for art in tag_articles:
+        json_article = {}
+        json_article['img_url'] = art.a.img.attrs['data-src']
+        # json_article['detail_url'] = art.a.attrs['href']
+        json_article['num'] = art.a.div.string
+        json_article['title'] = art.h2.a.string
+        json_article['data_pid'] = art.footer.a.attrs['data-pid']
+
+        # print(json_article)
+        json_articles.append(json_article)
+        # print()
+    # return json.dumps(json_articles)
+    return json_articles
+
+
+def momo_detail(detail_url):
+    req = request.Request(detail_url, headers=head)
+    responese = request.urlopen(req, timeout=20)
+    html = responese.read().decode('utf-8')
+    # print(html)
+    soup = BeautifulSoup(html, 'lxml')
+    tag_thumbs = soup.find_all(class_="ngg-gallery-thumbnail")
+    print(len(tag_thumbs))
+
+    json_thumbs = []
+    for thumb in tag_thumbs:
+        json_thumb = {}
+        json_thumb['img_url'] = thumb.a.attrs['href']
+        json_thumb['img_id'] = thumb.a.attrs['data-image-id']
+        json_thumb['img_title'] = thumb.a.attrs['data-title']
+
+        json_thumbs.append(json_thumb)
+
+    # return json.dumps(json_thumbs)
+    return json_thumbs
+
+
 def xuejieba():
     req = request.Request(url_xuejieba, headers=head)
     responese = request.urlopen(req)
@@ -74,7 +152,7 @@ def xuejieba():
 
 
 def sese(user_id, developer_id, create_time):
-    detail = xuejieba()
+    # detail = xuejieba()
     # rsp = JsonResponse(
     #     {'ToUserName': user_id, 'FromUserName': developer_id, 'CreateTime': create_time, 'MsgType': 'news',
     #      'ArticleCount': 1, 'Articles': [
